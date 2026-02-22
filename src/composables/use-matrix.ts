@@ -65,7 +65,10 @@ export function useMatrix(rows: number, cols: number) {
   const deserialize = (json: string) => {
     const entries: [string, Cell][] = JSON.parse(json)
     cells.clear()
-    for (const [k, v] of entries) cells.set(k, v)
+    for (const [k, v] of entries) {
+      console.log(k, v)
+      cells.set(k, v)
+    }
   }
 
   return {

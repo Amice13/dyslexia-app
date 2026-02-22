@@ -1,162 +1,3 @@
-<script setup lang="ts">
-import { useCamera } from '@/composables/use-camera'
-import { useMatrix } from '@/composables/use-matrix'
-import { useCellInput } from '@/composables/use-cell-input'
-
-const container = ref<HTMLDivElement | null>(null)
-
-const props = defineProps<{
-  rows: number
-  cols: number
-  cellSize?: number
-}>()
-
-const cellSize = props.cellSize ?? 36
-
-const {
-  rows,
-  cols,
-  selected,
-  toggleClass,
-  removeClasses,
-  setCell,
-  getCell,
-  selectCell
-} = useMatrix(props.rows, props.cols)
-
-const { inputValue } = useCellInput(selected, setCell)
-
-const {
-  worldStyle,
-  onPointerDown,
-  onPointerMove,
-  onWheel,
-  onPointerUp,
-  didDrag
-} = useCamera(container)
-
-const visibleCells = computed(() => {
-  const result = []
-  for (let x = 0; x < cols; x++) {
-    for (let y = 0; y < rows; y++) {
-      result.push({ x, y })
-    }
-  }
-  return result
-})
-
-onMounted(() => {
-  window.addEventListener('keydown', onKeydown)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('keydown', onKeydown)
-})
-
-const isInside = (x: number, y: number) =>
-  x >= 0 && y >= 0 && x < cols && y < rows
-
-function moveSelection(dx: number, dy: number) {
-  if (!selected.value) return
-
-  const nx = selected.value.x + dx
-  const ny = selected.value.y + dy
-
-  if (!isInside(nx, ny)) return
-
-  selectCell(nx, ny)
-}
-
-function centerOnSelected() {
-  if (!selected.value || !container.value) return
-
-  const rect = container.value.getBoundingClientRect()
-
-  const cx = selected.value.x * cellSize
-  const cy = selected.value.y * cellSize
-
-  offset.x = rect.width / 2 - cx * zoom.value
-  offset.y = rect.height / 2 - cy * zoom.value
-}
-
-function advanceAfterInput() {
-  if (!selected.value) return
-
-  if (selected.value.x + 1 < cols) {
-    moveSelection(1, 0)
-  } else if (selected.value.y + 1 < rows) {
-    selectCell(0, selected.value.y + 1)
-  }
-}
-
-function handleInput(value: string) {
-  inputValue(value)
-  advanceAfterInput()
-}
-
-function onKeydown(e: KeyboardEvent) {
-  if (!selected.value) return
-
-  switch (e.key) {
-    case 'ArrowRight':
-      moveSelection(1, 0)
-      break
-    case 'ArrowLeft':
-      moveSelection(-1, 0)
-      break
-    case 'ArrowDown':
-      moveSelection(0, 1)
-      break
-    case 'ArrowUp':
-      moveSelection(0, -1)
-      break
-    case 'Enter':
-      moveSelection(0, 1)
-      break
-    case 'Backspace':
-      backspace()
-      break
-    default:
-      if (/^[0-9=+./*-]$/.test(e.key)) {
-        if (e.key === '/') return handleInput('÷')
-        if (e.key === '*') return handleInput('×')
-        handleInput(e.key)
-      }
-  }
-}
-
-const pageWidth = computed(() => cols * cellSize)
-const pageHeight = computed(() => rows * cellSize)
-
-
-function backspace () {
-  const currentCell = getCell(selected.value.x, selected.value.y)
-  if (currentCell?.value && currentCell?.value !== '') {
-    setCell(selected.value.x, selected.value.y, '')
-  } else {
-    moveSelection(-1, 0)
-    setCell(selected.value.x, selected.value.y, '')    
-  }
-}
-
-function changeClass (value: string) {
-  toggleClass(selected.value.x, selected.value.y, value)
-}
-
-function handleCellClick(x: number, y: number) {
-  if (didDrag()) return
-  selectCell(x, y)
-}
-
-
-defineExpose({
-  changeClass,
-  removeClasses,
-  backspace,
-  handleInput
-})
-</script>
-
 <template>
   <div
     ref="container"
@@ -278,19 +119,21 @@ defineExpose({
   border-right: 2px solid black;
 }
 
-.cell.superscript {
+.cell.superscript,
+.cell.subscript {
   justify-content: start;
-  align-items: baseline;
 }
 
 .cell.superscript span {
-   vertical-align: super;
-   font-size: 0.5em;
+  font-size: 0.6em;
+  position: relative;
+  top: -5px;
 }
 
 .cell.subscript span {
-   vertical-align: bottom;
-   font-size: 0.8em;
+  font-size: 0.6em;
+  position: relative;
+  bottom: -5px;
 }
 
 .cell.downed span {
@@ -314,3 +157,174 @@ defineExpose({
   background: white;
 }
 </style>
+
+<script setup lang="ts">
+import { useCamera } from '@/composables/use-camera'
+import { useMatrix } from '@/composables/use-matrix'
+import { useCellInput } from '@/composables/use-cell-input'
+
+const container = ref<HTMLDivElement | null>(null)
+
+const props = defineProps<{
+  rows: number
+  cols: number
+  cellSize?: number
+}>()
+
+const cellSize = props.cellSize ?? 36
+
+const {
+  rows,
+  cols,
+  selected,
+  toggleClass,
+  removeClasses,
+  setCell,
+  getCell,
+  selectCell,
+  serialize,
+  deserialize
+} = useMatrix(props.rows, props.cols)
+
+const { inputValue } = useCellInput(selected, setCell)
+
+const {
+  worldStyle,
+  onPointerDown,
+  onPointerMove,
+  onWheel,
+  onPointerUp,
+  didDrag
+} = useCamera(container)
+
+const visibleCells = computed(() => {
+  const result = []
+  for (let x = 0; x < cols; x++) {
+    for (let y = 0; y < rows; y++) {
+      result.push({ x, y })
+    }
+  }
+  return result
+})
+
+onMounted(() => {
+  window.addEventListener('keydown', onKeydown)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', onKeydown)
+})
+
+const isInside = (x: number, y: number) =>
+  x >= 0 && y >= 0 && x < cols && y < rows
+
+function moveSelection(dx: number, dy: number) {
+  if (!selected.value) return
+
+  const nx = selected.value.x + dx
+  const ny = selected.value.y + dy
+
+  if (!isInside(nx, ny)) return
+
+  selectCell(nx, ny)
+}
+
+function centerOnSelected() {
+  if (!selected.value || !container.value) return
+
+  const rect = container.value.getBoundingClientRect()
+
+  const cx = selected.value.x * cellSize
+  const cy = selected.value.y * cellSize
+
+  offset.x = rect.width / 2 - cx * zoom.value
+  offset.y = rect.height / 2 - cy * zoom.value
+}
+
+function advanceAfterInput() {
+  if (!selected.value) return
+
+  if (selected.value.x + 1 < cols) {
+    moveSelection(1, 0)
+  } else if (selected.value.y + 1 < rows) {
+    selectCell(0, selected.value.y + 1)
+  }
+}
+
+function handleInput(value: string) {
+  inputValue(value)
+  advanceAfterInput()
+}
+
+function onKeydown(e: KeyboardEvent) {
+  if (!selected.value) return
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault()
+    e.stopPropagation()
+  }
+
+  switch (e.key) {
+    case 'ArrowRight':
+      moveSelection(1, 0)
+      break
+    case 'ArrowLeft':
+      moveSelection(-1, 0)
+      break
+    case 'ArrowDown':
+      moveSelection(0, 1)
+      break
+    case 'ArrowUp':
+      moveSelection(0, -1)
+      break
+    case 'Enter':
+      moveSelection(0, 1)
+      break
+    case 'Delete':
+      backspace()
+      break
+    case 'Backspace':
+      backspace()
+      break
+    default:
+      if (/^[0-9=+./*-]$/.test(e.key)) {
+        if (e.key === '/') return handleInput('÷')
+        if (e.key === '*') return handleInput('×')
+        handleInput(e.key)
+      }
+  }
+}
+
+const pageWidth = computed(() => cols * cellSize)
+const pageHeight = computed(() => rows * cellSize)
+
+
+function backspace () {
+  const currentCell = getCell(selected.value.x, selected.value.y)
+  if (currentCell?.value && currentCell?.value !== '') {
+    removeClasses(selected.value.x, selected.value.y)
+    setCell(selected.value.x, selected.value.y, '')
+  } else {
+    moveSelection(-1, 0)
+    removeClasses(selected.value.x, selected.value.y)
+    setCell(selected.value.x, selected.value.y, '')    
+  }
+}
+
+function changeClass (value: string) {
+  toggleClass(selected.value.x, selected.value.y, value)
+}
+
+function handleCellClick(x: number, y: number) {
+  if (didDrag()) return
+  selectCell(x, y)
+}
+
+defineExpose({
+  changeClass,
+  removeClasses,
+  backspace,
+  handleInput,
+  serialize,
+  deserialize
+})
+</script>
