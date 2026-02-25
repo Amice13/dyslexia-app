@@ -1,6 +1,20 @@
+import type { Ref } from 'vue'
+
 export function useCamera(container: Ref<HTMLElement | null>) {
   const zoom = ref(1)
   const offset = reactive({ x: 0, y: 0 })
+
+  const resetCamera = () => {
+    zoom.value = 1
+    offset.x = 0
+    offset.y = 0
+    lastX = 0
+    lastY = 0
+    initialDistance = 0
+    initialZoom = 1
+    activePointers.clear()
+    didDrag = false
+  }
 
   const clamp = (v: number, min: number, max: number) =>
     Math.min(Math.max(v, min), max)
@@ -40,13 +54,14 @@ export function useCamera(container: Ref<HTMLElement | null>) {
 
     if (activePointers.size === 2) {
       const [a, b] = [...activePointers.values()]
+      if (a === undefined || b === undefined) return
       initialDistance = getDistance(a, b)
       initialZoom = zoom.value
     }
   }
 
   const onWheel = (e: WheelEvent) => {
-    if (!container.value) return
+    if (!container?.value) return
 
     e.preventDefault()
 
@@ -74,6 +89,7 @@ export function useCamera(container: Ref<HTMLElement | null>) {
     // PINCH
     if (activePointers.size === 2) {
       const [a, b] = [...activePointers.values()]
+      if (a === undefined || b === undefined) return
       const newDistance = getDistance(a, b)
       const factor = newDistance / initialDistance
 
@@ -124,6 +140,7 @@ export function useCamera(container: Ref<HTMLElement | null>) {
     onPointerDown,
     onPointerMove,
     onPointerUp,
+    resetCamera,
     didDrag: () => didDrag
   }
 }

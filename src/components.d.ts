@@ -18,6 +18,7 @@ declare module 'vue' {
     RouterView: typeof import('vue-router')['RouterView']
     SpeechRecognition: typeof import('./components/Speech-Recognition.vue')['default']
     Syllable: typeof import('./components/Syllable.vue')['default']
+    ThePwaReloadDialog: typeof import('./components/ThePwaReloadDialog.vue')['default']
     Transcribe: typeof import('./components/Transcribe.vue')['default']
   }
 }

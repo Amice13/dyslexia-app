@@ -82,6 +82,9 @@
   border-left: 3px solid;
   border-top: 3px solid;
   border-top-left-radius: 70%;
+  position: relative;
+  top: 1px;
+  left: -1px;
 }
 
 .cell.rounded-bottom-border span {
@@ -91,6 +94,9 @@
   border-left: 3px solid;
   border-bottom: 3px solid;
   border-bottom-left-radius: 70%;
+  position: relative;
+  top: -1px;
+  left: -1px;
 }
 
 .cell.strikethrough span {
@@ -109,6 +115,10 @@
 .cell.rounded-up-border,
 .cell.rounded-bottom-border {
   z-index: 1;
+}
+
+.cell.colored.bg-border-lg.border-solid.black {
+  border: 3px solid black !important;
 }
 
 .cell.underlined {
@@ -194,6 +204,7 @@ const {
   onPointerMove,
   onWheel,
   onPointerUp,
+  resetCamera,
   didDrag
 } = useCamera(container)
 
@@ -227,18 +238,6 @@ function moveSelection(dx: number, dy: number) {
   if (!isInside(nx, ny)) return
 
   selectCell(nx, ny)
-}
-
-function centerOnSelected() {
-  if (!selected.value || !container.value) return
-
-  const rect = container.value.getBoundingClientRect()
-
-  const cx = selected.value.x * cellSize
-  const cy = selected.value.y * cellSize
-
-  offset.x = rect.width / 2 - cx * zoom.value
-  offset.y = rect.height / 2 - cy * zoom.value
 }
 
 function advanceAfterInput() {
@@ -299,6 +298,7 @@ const pageHeight = computed(() => rows * cellSize)
 
 
 function backspace () {
+  if (!selected.value) return
   const currentCell = getCell(selected.value.x, selected.value.y)
   if (currentCell?.value && currentCell?.value !== '') {
     removeClasses(selected.value.x, selected.value.y)
@@ -311,6 +311,7 @@ function backspace () {
 }
 
 function changeClass (value: string) {
+  if (!selected.value) return
   toggleClass(selected.value.x, selected.value.y, value)
 }
 
@@ -324,6 +325,7 @@ defineExpose({
   removeClasses,
   backspace,
   handleInput,
+  resetCamera,
   serialize,
   deserialize
 })

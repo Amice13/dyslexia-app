@@ -42,10 +42,8 @@
                   </v-col>
                 </v-row>
               </v-container>
-              <v-container v-if="availableButtons.length === 0" class="bg-primary-darken-1">
+              <v-container v-if="currentLayout === '🖌'" class="bg-primary-darken-1">
                 <v-row no-gutters>
-
-
                   <v-col
                     cols="3"
                     class="mb-4 text-center"
@@ -54,13 +52,15 @@
                       🖌
                       <v-menu activator="parent">
                       <v-color-picker
-                        @update:modelValue="(e) => handleClass(`colored bg-${colors[e]}`)"
+                        @update:modelValue="(e: keyof typeof colors) => handleClass(`colored bg-${colors[e]}`)"
                         :swatches="swatches"
+                        :swatches-max-height="240"
+                        min-height="220"
                         hide-canvas
                         hide-eye-dropper
                         hide-inputs
                         hide-sliders
-                        class="ma-2"
+                        class="ma-2 custom-color-swatch"
                         show-swatches
                       />
                     </v-menu>
@@ -72,7 +72,20 @@
                     cols="3"
                     class="mb-4 text-center"
                   >
-                    <v-btn @click="handleClass(classesDict[n])" class="text-h5 pr-1" size="large" icon>{{n}}</v-btn>
+                    <v-btn @click="handleClass(classesDict[n as keyof typeof classesDict])" class="text-h5 pr-1" size="large" icon>{{n}}</v-btn>
+                  </v-col>
+                </v-row>
+              </v-container>
+              <v-container v-if="currentLayout === '💾'" class="bg-primary-darken-1">
+                <v-row no-gutters>
+                  <v-col cols="12" class="d-flex justify-space-between">
+                    <v-btn prepend-icon="mdi-delete" variant="text">Supprimer</v-btn>
+                    <v-btn
+                      @click="saveGrid"
+                      prepend-icon="mdi-content-save"
+                      color="yellow-darken-2"
+                      variant="flat"
+                    >Sauver</v-btn>
                   </v-col>
                 </v-row>
               </v-container>
@@ -97,7 +110,6 @@
 
 <route lang="yaml">
 meta:
-  layout: grid-note
   title: Cahier
 </route>
 
@@ -111,23 +123,23 @@ meta:
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   cursor: pointer;
 }
+
+.custom-color-swatch .v-color-picker-swatches__color {
+  min-height: 48px;
+  height: 48px;
+}
 </style>
 
 <script lang="ts" setup>
-
+import { v7 as uuid } from 'uuid'
 import GridPage from '@/components/Grid-Page.vue'
 import { toPng } from 'html-to-image'
+import useGridnotes from '@/composables/use-database'
+import { type Gridnote } from '@/composables/use-database'
 
-// setTimeout(() => {
-//   const node = document.querySelector('.world')
-//   toPng(node)
-//   .then((dataUrl) => {
-//     const img = new Image();
-//     img.src = dataUrl;
-//     document.body.appendChild(img);
-//   })
-// }, 10000)
-
+const route = useRoute()
+const router = useRouter()
+const { gridnotes }  = useGridnotes()
 const gridRef = ref<InstanceType<typeof GridPage> | null>(null)
 
 function handleButton(value: string) {
@@ -228,28 +240,43 @@ const availableButtons = computed<string[]>(() => {
   return []
 })
 
-onMounted(() => {
-  const data = gridRef?.value?.serialize()
-  pages.value.push(data)
+onMounted(async () => {
+  const params = route.params as { _id: string } 
+  if (!params?._id || params._id === 'new') {
+    const data = gridRef?.value?.serialize()
+    if (typeof data !== 'string') return false
+    pages.value.push(data)
+  } else {
+    const currentPages = await gridnotes.get(params._id)
+    if (!currentPages) return
+    pages.value = [...currentPages.data]
+    currentPage.value = pages.value.length ? pages.value.length - 1 : 0
+    getPage(currentPage.value)
+  }
 })
 
-const pages = ref([])
+const pages = ref<string[]>([])
+
 const currentPage = ref(pages.value.length ? pages.value.length - 1 : 0)
 
 const addPage = () => {
   const data = gridRef?.value?.serialize()
-  pages.value.splice(currentPage.value, 1, data)
-  pages.value.push([])
+  pages.value.splice(currentPage.value, 1, data ?? '[]')
+  const newData = '[]'
+  pages.value.push(newData)
   currentPage.value = pages.value.length - 1
   gridRef?.value?.deserialize('[]')
 }
 
 const getPage = (i: number) => {
-  const data = gridRef?.value?.serialize()
-  pages.value.splice(currentPage.value, 1, data)
-  pages.value[currentPage.value] = data
-  currentPage.value = i
-  const page = pages.value[i]
+  if (i !== currentPage.value) {
+    const data = gridRef?.value?.serialize()
+    pages.value.splice(currentPage.value, 1, data ?? '[]')
+    if (!pages.value[currentPage.value]) return
+    pages.value[currentPage.value] = data ?? '[]'
+    currentPage.value = i
+  }
+  const page = pages.value[i] ?? '[]'
   gridRef?.value?.deserialize(page)
 }
 
@@ -258,7 +285,7 @@ const swatches = [
   ['#3F51B5', '#2196F3', '#00BCD4', '#009688'],
   ['#8BC34A', '#4CAF50', '#CDDC39', '#FFEB3B'],
   ['#FFC107', '#FF9800', '#FF5722', '#795548'],
-  ['#607D8B', '#9E9E9E', '#000000'],
+  ['#607D8B', '#9E9E9E', '#000000', '#FFFFFF'],
 ]
 
 const colors = {
@@ -280,7 +307,57 @@ const colors = {
   '#FF5722': 'deep-orange',
   '#795548': 'brown',
   '#607D8B': 'blue-grey',
-  '#000000': 'black'
+  '#9E9E9E': 'grey',
+  '#000000': 'black',
+  '#FFFFFF': 'border-lg border-solid black'
+}
+
+const generateImage = async () => {
+  getPage(0)
+  gridRef?.value?.resetCamera()
+  const node = document.querySelector('.world')
+  if (!node) return ''
+  const dataUrl = await toPng(node as HTMLElement, {
+    width: 28 * 36,
+    height: 36 * 36,
+    pixelRatio: 1,
+    quality: 0.8
+  })
+  return dataUrl
+}
+
+const generateFileName = () => {
+  const currentDate = new Date()
+  const date = currentDate.toLocaleDateString('sv-SV')
+  const dayOfWeek = currentDate.toLocaleDateString('fr-FR', { weekday: 'long' })
+  const name = [date, dayOfWeek].join(' - ')
+  return name
+}
+
+generateFileName()
+
+const saveGrid = async () => {
+  getPage(0)
+  gridRef?.value?.resetCamera()
+  const currentData = gridRef?.value?.serialize()
+  pages.value.splice(currentPage.value, 1, currentData as string)
+  const params = route.params as { _id?: string }
+  const id = (!params._id || params._id === 'new') ? uuid() : params._id
+  const data = toRaw(pages.value)
+  const fileName = generateFileName()
+  const cover = await generateImage()
+  const date = new Date().toISOString()
+  const numberOfpages = data.length
+  const note: Gridnote = ({
+    id,
+    data,
+    fileName,
+    cover,
+    date,
+    pages: numberOfpages
+  })
+  gridnotes.put(note)
+  router.push('/')
 }
 
 </script>

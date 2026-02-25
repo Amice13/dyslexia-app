@@ -7,6 +7,8 @@ import Vue from '@vitejs/plugin-vue'
 import VueRouter from 'unplugin-vue-router/vite'
 import { VueRouterAutoImports } from 'unplugin-vue-router'
 import Vuetify, { transformAssetUrls } from 'vite-plugin-vuetify'
+import { VitePWA } from 'vite-plugin-pwa'
+import PWAConfig from './pwa.config'
 
 // Utilities
 import { defineConfig } from 'vite'
@@ -18,6 +20,7 @@ export default defineConfig({
     VueRouter({
       dts: 'src/typed-router.d.ts',
     }),
+    VitePWA(PWAConfig),
     Layouts(),
     AutoImport({
       imports: [
@@ -85,4 +88,8 @@ export default defineConfig({
   server: {
     port: 3000,
   },
+  build: {
+    outDir: './docs',
+    emptyOutDir: true
+  }
 })

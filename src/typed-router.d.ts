@@ -20,7 +20,7 @@ declare module 'vue-router/auto-routes' {
   export interface RouteNamedMap {
     '/': RouteRecordInfo<'/', '/', Record<never, never>, Record<never, never>>,
     '/Book': RouteRecordInfo<'/Book', '/Book', Record<never, never>, Record<never, never>>,
-    '/Gridnote': RouteRecordInfo<'/Gridnote', '/Gridnote', Record<never, never>, Record<never, never>>,
+    '/gridnote/[_id]': RouteRecordInfo<'/gridnote/[_id]', '/gridnote/:_id', { _id: ParamValue<true> }, { _id: ParamValue<false> }>,
   }
 
   /**
@@ -42,8 +42,8 @@ declare module 'vue-router/auto-routes' {
       routes: '/Book'
       views: never
     }
-    'src/pages/Gridnote.vue': {
-      routes: '/Gridnote'
+    'src/pages/gridnote/[_id].vue': {
+      routes: '/gridnote/[_id]'
       views: never
     }
   }

@@ -1,3 +1,5 @@
+import type { Ref } from 'vue'
+
 export function useCellInput(
   selected: Ref<{ x: number; y: number } | null>,
   setCell: (x: number, y: number, value: string) => void
