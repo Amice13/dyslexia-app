@@ -5,8 +5,8 @@
     color="primary"
     class="pwa-reload"
   >
-    <span v-if="offlineReady">App is ready to work offline</span>
-    <span v-if="needRefresh">Update the app</span>
+    <span v-if="offlineReady">L'application est prête à fonctionner hors ligne</span>
+    <span v-if="needRefresh">Mettez à jour l'application</span>
 
     <template #actions>
       <v-btn v-if="needRefresh" @click="close" variant="text">Fermer</v-btn>

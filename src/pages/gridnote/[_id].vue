@@ -79,7 +79,7 @@
               <v-container v-if="currentLayout === '💾'" class="bg-primary-darken-1">
                 <v-row no-gutters>
                   <v-col cols="12" class="d-flex justify-space-between">
-                    <v-btn prepend-icon="mdi-delete" variant="text">Supprimer</v-btn>
+                    <v-btn prepend-icon="mdi-delete" variant="text" />
                     <v-btn
                       @click="saveGrid"
                       prepend-icon="mdi-content-save"
@@ -337,10 +337,10 @@ const generateFileName = () => {
 generateFileName()
 
 const saveGrid = async () => {
-  getPage(0)
-  gridRef?.value?.resetCamera()
   const currentData = gridRef?.value?.serialize()
   pages.value.splice(currentPage.value, 1, currentData as string)
+  getPage(0)
+  gridRef?.value?.resetCamera()
   const params = route.params as { _id?: string }
   const id = (!params._id || params._id === 'new') ? uuid() : params._id
   const data = toRaw(pages.value)
