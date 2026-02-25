@@ -1,7 +1,7 @@
 <template>
   <v-container fluid style="height: 100vh;">
     <v-row>
-      <v-col cols="9">
+      <v-col cols="8">
         <div class="grid-wrapper" style="height: calc(100vh - 78px); overflow: hidden;">
           <grid-page :rows="36" :cols="28" ref="gridRef" />
         </div>
@@ -14,7 +14,7 @@
           <v-chip @click="addPage()">+</v-chip>
         </v-chip-group>
       </v-col>
-      <v-col cols="3">
+      <v-col cols="4">
         <v-card class="pa-0">
           <v-card-text class="pa-0 d-flex">
             <div>

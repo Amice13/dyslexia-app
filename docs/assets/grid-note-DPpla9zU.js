@@ -1,1 +1,0 @@
-import{V as o}from"./VMain-Dmd7wwvb.js";import{v as t,E as r,x as n,y as a,A as s,f as _}from"./index-FlfV5Qxj.js";import"./dimensions-DE2oYLOW.js";const l=t({__name:"grid-note",setup(c){return(p,i)=>{const e=r("router-view");return n(),a(o,null,{default:s(()=>[_(e)]),_:1})}}});export{l as default};
