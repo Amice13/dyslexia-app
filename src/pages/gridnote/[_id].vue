@@ -15,7 +15,7 @@
         </v-chip-group>
       </v-col>
       <v-col cols="4">
-        <v-card class="pa-0" style="max-height: calc(100vh - 32px); overflow: auto;">
+        <v-card class="pa-0" style="max-height: calc(100vh - 64px); overflow: auto;">
           <v-card-text class="pa-0 d-flex">
             <div>
               <v-container class="bg-primary">
