@@ -26,7 +26,7 @@
                     cols="3"
                     class="mb-4 text-center"
                   >
-                    <v-btn @click="handleButton(n)" class="text-h5 pr-1" size="large" icon>{{n}}</v-btn>
+                    <v-btn @click="handleButton(n)" class="text-h5 pr-1" icon>{{n}}</v-btn>
                   </v-col>
                 </v-row>
               </v-container>
@@ -38,7 +38,7 @@
                     cols="3"
                     class="mb-4 text-center"
                   >
-                    <v-btn @click="handleButton(n)" class="text-h5 pr-1" size="large" icon>{{n}}</v-btn>
+                    <v-btn @click="handleButton(n)" class="text-h5 pr-1" icon>{{n}}</v-btn>
                   </v-col>
                 </v-row>
               </v-container>
@@ -48,7 +48,7 @@
                     cols="3"
                     class="mb-4 text-center"
                   >
-                    <v-btn class="text-h5 pr-1" size="large" icon>
+                    <v-btn class="text-h5 pr-1" icon>
                       🖌
                       <v-menu activator="parent">
                       <v-color-picker
@@ -72,7 +72,7 @@
                     cols="3"
                     class="mb-4 text-center"
                   >
-                    <v-btn @click="handleClass(classesDict[n as keyof typeof classesDict])" class="text-h5 pr-1" size="large" icon>{{n}}</v-btn>
+                    <v-btn @click="handleClass(classesDict[n as keyof typeof classesDict])" class="text-h5 pr-1" icon>{{n}}</v-btn>
                   </v-col>
                 </v-row>
               </v-container>
